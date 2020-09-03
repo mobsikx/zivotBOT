@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #
-set -e
 
 ##C&V       ##
 #  Consts
@@ -76,7 +75,7 @@ SELECT al.id
        AND al.location_hash = '${hash}'
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
-  if [ -z ${res} ]; then return 1; fi # not a such record in the db
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
 
   echo "${res}"
   return 0
@@ -90,15 +89,77 @@ function db_traveltime_recminimum() {
 SELECT tt.minimum
   FROM travel_locations tl
   JOIN adv_locations al ON al.id = tl.id_adv_location
-  JOIN travel_times tt ON tt.id = tl.id_adv_location
+  JOIN travel_times tt  ON tt.id = tl.id_adv_location
  WHERE 1 = 1
        AND al.id = '${loc_id}'
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
-  if [ -z ${res} ]; then return 1; fi # not a such record in the db
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
 
   echo "${res}"
   return 0
+}
+
+function db_travellocation_recid() {
+  local loc_id="${1}"
+  local time_id="${2}"
+
+  res=`echo "
+SELECT id
+  FROM travel_locations
+ WHERE 1 = 1
+       AND id_adv_location = ${loc_id}
+       AND id_travel_times = ${time_id}
+ LIMIT 1;
+" | sqlite3 "${C_DB_FILE}"`
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
+
+  echo "${res}"
+  return 0
+}
+
+function db_location_insert() {
+  local loc="${1}"
+  local hash="${2}"
+
+  last_id=`echo "
+INSERT INTO adv_locations (location, location_hash)
+     VALUES ('${loc}', '${hash}');
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
+function db_traveltimeminimum_insert() {
+  local minimum="${1}"
+
+ last_id=`echo "
+INSERT INTO travel_times (minimum)
+     VALUES (${minimum});
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
+function db_travellocation_insert() {
+  local loc_id="${1}"
+  local time_id="${2}"
+
+  last_id=`echo "
+INSERT INTO travel_locations (id_adv_location, id_travel_times)
+     VALUES (${loc_id}, ${time_id});
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
 }
 
 ##M   ##
@@ -122,38 +183,47 @@ do
   
   loc_from=`strip_location "${loc}"`
   loc_from=`uriencode "${loc_from}"`
-  #echo ${sha_link}
-  #echo ${sha_loc}
-  
-  for loc_to in ${l_locs_to[@]}
-  do
-    for station_type in ${l_station_types[@]}
-    do
-      curl -sfkL 'https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?date='${C_NEXT_TUESDAY}'&time=05:00&f='${loc_from}'&fc='${station_type}'&t='${loc_to}'&tc='${station_type} >> /app/tmp/idos-${idx}.dump 2>/dev/null
-    done
-  done
-
-  loc_rec_id=`db_location_recid "${sha_loc}"`
-  if [[ $? -eq 0 ]]; then
-    travel_minutes_minimum=`db_traveltime_recminimum "${loc_rec_id}"`
-    if [[ $? -ne 0 ]]; then
-      echo "Could not find the travel time information in DB."
-    else
-      echo "Travel time found in DB: ${travel_minutes_minimum}"
-    fi
-  else
-    echo "\"${loc}\" is NOT in DB."
-  fi
-  
-  IFS=$'\n'
-  l_travel_times=(`cat /app/tmp/idos-${idx}.dump | grep -oiE 'Celkový čas.*(hod|min)' | cut -f 2 -d '>'`)
-  for travel_time in ${l_travel_times[@]}
-  do
-    l_travel_minutes+=(`travel_minutes "${travel_time}"`)
-  done
-  unset IFS
  
-  find_minimum "${l_travel_minutes[@]}" 
+  loc_id=`db_location_recid "${sha_loc}"`
+  if [[ $? -ne 0 ]]; then
+    loc_id=`db_location_insert "${loc}" "${sha_loc}"`
+  fi
+  echo "after loc"
+
+  travel_minutes_minimum=`db_traveltime_recminimum "${loc_id}"`
+  if [[ $? -ne 0 ]]; then
+    for loc_to in ${l_locs_to[@]}
+    do
+      for station_type in ${l_station_types[@]}
+      do
+        curl -sfkL 'https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?date='${C_NEXT_TUESDAY}'&time=05:00&f='${loc_from}'&fc='${station_type}'&t='${loc_to}'&tc='${station_type} >> /app/tmp/idos-${idx}.dump 2>/dev/null
+      done
+    done
+
+    IFS=$'\n'
+    l_travel_times=(`cat /app/tmp/idos-${idx}.dump | grep -oiE 'Celkový čas.*(hod|min)' | cut -f 2 -d '>'`)
+    for travel_time in ${l_travel_times[@]}
+    do
+      l_travel_minutes+=(`travel_minutes "${travel_time}"`)
+    done
+    unset IFS
+ 
+    echo "find_minimum \"${l_travel_minutes[@]}\""
+    travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
+    echo "db_traveltimeminimum_insert ${travel_minutes_minimum}"
+    traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
+    echo "traveltime_id: ${traveltime_id}"
+  fi
+  echo "after travel time minimum"
+  echo "db_travellocation_recid ${loc_id} ${traveltime_id}"
+
+  travel_loc_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
+  if [[ $? -ne 0 ]]; then
+    travel_loc_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
+  fi
+  echo "after travel location record"
+
+  echo ${travel_loc_id}
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
