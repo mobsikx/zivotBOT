@@ -7,7 +7,8 @@ set -e
 #    &
 # Variables #
 ##         ##
-readonly C_LIST_FILE="/tmp/list.dump"
+readonly C_LIST_FILE="/app/tmp/list.dump"
+readonly C_DB_FILE="/app/db/zivotbot.db"
 readonly C_NEXT_TUESDAY=$(date -d "next Tuesday" '+%d.%m.%Y')
 declare -a l_locs_to=("Praha,,Hlavn%C3%AD%20nádraž%C3%AD" "Praha%20Masarykovo%20n." "Praha,,Ládv%C3%AD" "Praha,,Kobylisy" "Praha-Holešovice")
 declare -a l_station_types=("200003" "100003")
@@ -54,7 +55,45 @@ function travel_minutes() {
 }
 
 function find_minimum() {
-  local 
+  local l_array=($@)
+
+  readarray -t l_sorted < <(printf '%s\0' "${l_array[@]}" | sort -unz | xargs -0n1)
+
+  echo ${l_sorted[0]}
+  return
+}
+
+function db_adv_present() {
+  local hash="${1}"
+  local which_hash="`echo \"${2}\" | tr 'A-Z' 'a-z'`" # url or location
+
+  adv_id=`echo "SELECT MAX(id) FROM adv_list WHERE ${which_hash}_hash = '"${hash}"';" | sqlite3 "${C_DB_FILE}"`
+  if [ -z ${adv_id} ]; then return 1; fi # not a such record in the db
+
+  echo "${adv_id}"
+  return 0
+}
+
+function db_notification_present() {
+  local adv_id="${1}"
+
+  notif_id=`echo "SELECT MAX(id) FROM adv_notifications WHERE id_adv_list = ${adv_id};" | sqlite3 "${C_DB_FILE}"`
+
+  if [ -z ${notif_id} ]; then return 1; fi # not a such record in the db
+
+  echo "${notif_id}"
+  return 0
+}
+
+function db_traveltime_present() {
+  local adv_id="${1}"
+
+  trav_id=`echo "SELECT MAX(id) FROM adv_traveltime WHERE id_adv_list = ${adv_id};" | sqlite3 "${C_DB_FILE}"`
+
+  if [ -z ${trav_id} ]; then return 1; fi # not a such record in the db
+
+  echo "${trav_id}"
+  return 0
 }
 
 ##M   ##
@@ -69,8 +108,8 @@ idx=0
 for l in ${l_links[@]}
 do
   sha_link=$(echo -n "https://sreality.cz${l}" | sha256sum -t | awk '{ print $1 }')
-  google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/tmp/detail-${idx}.dump" 2>/dev/null
-  loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
+  google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
+  loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
   sha_loc=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
   
   loc_from=`strip_location "${loc}"`
@@ -82,20 +121,19 @@ do
   do
     for station_type in ${l_station_types[@]}
     do
-      curl -sfkL 'https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?date='${C_NEXT_TUESDAY}'&time=05:00&f='${loc_from}'&fc=${station_type}&t='${loc_to}'&tc=${station_type}' >> /tmp/idos-${idx}.dump 2>/dev/null
+      curl -sfkL 'https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?date='${C_NEXT_TUESDAY}'&time=05:00&f='${loc_from}'&fc='${station_type}'&t='${loc_to}'&tc='${station_type} >> /app/tmp/idos-${idx}.dump 2>/dev/null
     done
   done
   
   IFS=$'\n'
-  l_travel_times=(`cat /tmp/idos-${idx}.dump | grep -oiE 'Celkový čas.*(hod|min)' | cut -f 2 -d '>'`)
+  l_travel_times=(`cat /app/tmp/idos-${idx}.dump | grep -oiE 'Celkový čas.*(hod|min)' | cut -f 2 -d '>'`)
   for travel_time in ${l_travel_times[@]}
   do
     l_travel_minutes+=(`travel_minutes "${travel_time}"`)
   done
   unset IFS
-  
-  readarray -t sorted < <(printf '%s\0' "${l_travel_minutes[@]}" | sort -dnz | xargs -0n1)
-  echo ${sorted[0]}
+ 
+  find_minimum "${l_travel_minutes[@]}" 
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
