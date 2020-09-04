@@ -126,7 +126,9 @@ function db_location_insert() {
 INSERT INTO adv_locations (location, location_hash)
      VALUES ('${loc}', '${hash}');
 
-SELECT last_insert_rowid();
+SELECT last_insert_rowid()
+  FROM adv_locations
+ LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
@@ -140,7 +142,9 @@ function db_traveltimeminimum_insert() {
 INSERT INTO travel_times (minimum)
      VALUES (${minimum});
 
-SELECT last_insert_rowid();
+SELECT last_insert_rowid()
+  FROM travel_times
+ LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
@@ -152,10 +156,12 @@ function db_travellocation_insert() {
   local time_id="${2}"
 
   last_id=`echo "
-INSERT INTO travel_locations (id_adv_location, id_travel_times)
+INSERT INTO travel_locations ()
      VALUES (${loc_id}, ${time_id});
 
-SELECT last_insert_rowid();
+SELECT last_insert_rowid()
+  FROM travel_locations
+ LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
@@ -189,7 +195,7 @@ do
     loc_id=`db_location_insert "${loc}" "${sha_loc}"`
   fi
 
-  traveltime_id=`db_traveltime_recid "${loc_id}"`
+  travel_location_id=`db_traveltime_recid "${loc_id}"`
   if [[ $? -ne 0 ]]; then
     for loc_to in ${l_locs_to[@]}
     do
@@ -208,21 +214,15 @@ do
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
-    if [[ -z ${travel_minutes_minimum} ]]; then
-      traveltime_id=0
-    else
-      traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
-    fi
+    traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
   fi
 
-  if [[ ${traveltime_id} -ne 0 ]]; then
-    travel_loc_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
-    if [[ $? -ne 0 ]]; then
-      travel_loc_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
-    fi
+  travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
+  if [[ $? -ne 0 ]]; then
+    travel_location_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
   fi
 
-  echo ${travel_loc_id}
+  echo ${travel_location_id}
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
