@@ -162,14 +162,32 @@ SELECT last_insert_rowid();
   return
 }
 
+function db_config_get() {
+  local rec_table="${1}"
+  local rec_column="${2}"
+  local rec_filter="${3}"
+  
+  res=`echo "
+SELECT ${rec_column}
+  FROM ${rec_table}
+ WHERE ${rec_filter};
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo "${res}"
+  return 0
+}
+
 ##M   ##
 # Main #
 ##    ##
 # remove older tmp files
 rm -f /app/tmp/*
 
+# get search url from configuration
+adv_search_url=`db_config_get "config_advertisement" "url" "name = 'search_sreality'"`
+
 # ziskej prehled inzeratu
-google-chrome --no-sandbox --headless --disable-gpu --dump-dom 'https://www.sreality.cz/hledani/prodej/domy/rodinne-domy,vily,chalupy,pamatky-jine,zemedelske-usedlosti/stredocesky-kraj?pois_in_place_distance=1.5&per_page=100&pois_in_place=1%7C2&navic=samostatny&stav=po-rekonstrukci,novostavby,dobry-stav,velmi-dobry-stav&plocha-od=90&plocha-do=10000000000&cena-od=0&cena-do=5000000&plocha-pozemku-od=0&plocha-pozemku-od=500&plocha-pozemku-do=2000&bez-aukce=1' > ${C_LIST_FILE} 2>/dev/null
+google-chrome --no-sandbox --headless --disable-gpu --dump-dom "\'${adv_search_url}\'" > ${C_LIST_FILE} 2>/dev/null
 
 # postahuj detaily inzeratu
 l_links=(`grep -ioE '<a ng-href="/detail.* ng-click="' ${C_LIST_FILE} | cut -f 2 -d '"' | sort -u`)
