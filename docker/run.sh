@@ -187,7 +187,7 @@ rm -f /app/tmp/*
 adv_search_url=`db_config_get "config_advertisement" "url" "name = 'search_sreality'"`
 
 # ziskej prehled inzeratu
-google-chrome --no-sandbox --headless --disable-gpu --dump-dom "\'${adv_search_url}\'" > ${C_LIST_FILE} 2>/dev/null
+google-chrome --no-sandbox --headless --disable-gpu --dump-dom "${adv_search_url}" > ${C_LIST_FILE} 2>/dev/null
 
 # postahuj detaily inzeratu
 l_links=(`grep -ioE '<a ng-href="/detail.* ng-click="' ${C_LIST_FILE} | cut -f 2 -d '"' | sort -u`)
