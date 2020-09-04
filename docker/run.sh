@@ -81,12 +81,12 @@ SELECT al.id
   return 0
 }
 
-function db_traveltime_recminimum() {
+function db_traveltime_recid() {
   local loc_id="${1}"
 
   res=`echo "
 -- check if we have the travel info for that location
-SELECT tt.minimum
+SELECT tt.id
   FROM travel_locations tl
   JOIN adv_locations al ON al.id = tl.id_adv_location
   JOIN travel_times tt  ON tt.id = tl.id_adv_location
@@ -188,9 +188,8 @@ do
   if [[ $? -ne 0 ]]; then
     loc_id=`db_location_insert "${loc}" "${sha_loc}"`
   fi
-  echo "after loc"
 
-  travel_minutes_minimum=`db_traveltime_recminimum "${loc_id}"`
+  traveltime_id=`db_traveltime_recid "${loc_id}"`
   if [[ $? -ne 0 ]]; then
     for loc_to in ${l_locs_to[@]}
     do
@@ -208,20 +207,20 @@ do
     done
     unset IFS
  
-    echo "find_minimum \"${l_travel_minutes[@]}\""
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
-    echo "db_traveltimeminimum_insert ${travel_minutes_minimum}"
-    traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
-    echo "traveltime_id: ${traveltime_id}"
+    if [[ -z ${travel_minutes_minimum} ]]; then
+      traveltime_id=0
+    else
+      traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
+    fi
   fi
-  echo "after travel time minimum"
-  echo "db_travellocation_recid ${loc_id} ${traveltime_id}"
 
-  travel_loc_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
-  if [[ $? -ne 0 ]]; then
-    travel_loc_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
+  if [[ ${traveltime_id} -ne 0 ]]; then
+    travel_loc_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
+    if [[ $? -ne 0 ]]; then
+      travel_loc_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
+    fi
   fi
-  echo "after travel location record"
 
   echo ${travel_loc_id}
   
