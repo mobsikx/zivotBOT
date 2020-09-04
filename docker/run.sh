@@ -208,7 +208,10 @@ do
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
-    echo "Minimum: ${travel_minutes_minimum}"
+    
+    if [ -z ${travel_minutes_minimum} ]; then
+      continue
+    fi
     
     traveltime_id=`db_traveltime_insert ${travel_minutes_minimum}`
   fi
