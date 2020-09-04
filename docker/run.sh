@@ -218,7 +218,7 @@ function db_completionlist_insert() {
   local loc_id="${1}"
   local url_id="${2}"
   
-  last_id=last_id=`echo "
+  last_id=`echo "
 INSERT INTO adv_completion_list (id_adv_url, id_adv_location)
      VALUES ('${url_id}', '${url_id}');
 
