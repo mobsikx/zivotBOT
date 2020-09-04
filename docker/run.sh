@@ -138,7 +138,7 @@ SELECT id
   FROM travel_locations
  WHERE 1 = 1
        AND id_adv_location = ${loc_id}
-       AND id_travel_times = ${time_id}
+       AND id_travel_time = ${time_id}
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
   if [ -z ${res} ]; then return 1; fi # not such a record in the db
@@ -152,7 +152,7 @@ function db_travellocation_insert() {
   local time_id="${2}"
 
   last_id=`echo "
-INSERT INTO travel_locations (id_adv_location, id_travel_times)
+INSERT INTO travel_locations (id_adv_location, id_travel_time)
      VALUES (${loc_id}, ${time_id});
 
 SELECT last_insert_rowid();
