@@ -162,7 +162,40 @@ SELECT last_insert_rowid();
   return
 }
 
-function db_config_get() {
+function db_url_recid() {
+  local hash="${1}"
+
+  res=`echo "
+-- check if we have the location info for that location
+SELECT au.id
+  FROM adv_urls au
+ WHERE 1 = 1
+       AND au.url_hash = '${hash}'
+ LIMIT 1;
+" | sqlite3 "${C_DB_FILE}"`
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
+
+  echo "${res}"
+  return 0
+}
+
+function db_url_insert() {
+  local url="${1}"
+  local hash="${2}"
+
+  last_id=`echo "
+INSERT INTO adv_urls (url, url_hash)
+     VALUES ('${url}', '${hash}');
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
+
+function db_get() {
   local rec_table="${1}"
   local rec_column="${2}"
   local rec_filter="${3}"
@@ -172,6 +205,8 @@ SELECT ${rec_column}
   FROM ${rec_table}
  WHERE ${rec_filter};
 " | sqlite3 "${C_DB_FILE}"`
+
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
 
   echo "${res}"
   return 0
@@ -184,7 +219,7 @@ SELECT ${rec_column}
 rm -f /app/tmp/*
 
 # get search url from configuration
-adv_search_url=`db_config_get "config_advertisement" "url" "name = 'search_sreality'"`
+adv_search_url=`db_get "config_advertisement" "url" "name = 'search_sreality'"`
 
 # ziskej prehled inzeratu
 google-chrome --no-sandbox --headless --disable-gpu --dump-dom "${adv_search_url}" > ${C_LIST_FILE} 2>/dev/null
@@ -239,7 +274,12 @@ do
     travel_location_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
   fi
 
-  echo ${travel_location_id}
+  url_id=`db_url_recid "${link_sha256sum}"`
+  if [[ $? -ne 0 ]]; then
+    url_id=`db_url_insert "${l}" "${link_sha256sum}"`
+  fi
+  
+  
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
