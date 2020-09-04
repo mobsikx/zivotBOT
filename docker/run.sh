@@ -14,6 +14,7 @@ declare -a l_station_types=("200003" "100003")
 declare -a l_links=()
 declare -a l_travel_times=()
 declare -a l_travel_minutes=()
+declare -a l_tosend=()
 
 ##F        ##
 # Functions #
@@ -194,6 +195,71 @@ SELECT last_insert_rowid();
   return
 }
 
+function db_completionlist_recid() {
+  local loc_id="${1}"
+  local url_id="${2}"
+  
+  res=`echo "
+SELECT acl.id
+  FROM adv_completion_list acl
+ WHERE 1 = 1
+       AND acl.id_adv_location = ${loc_id}
+       AND acl.id_adv_url = ${url_id}
+ LIMIT 1;
+" | sqlite3 "${C_DB_FILE}"`
+
+  if [ -z ${res} ]; then return 1; fi # not such a record in the db
+  
+  echo ${res}
+  return 0
+}
+
+function db_completionlist_insert() {
+  local loc_id="${1}"
+  local url_id="${2}"
+  
+  last_id=last_id=`echo "
+INSERT INTO adv_completion_list (id_adv_url, id_adv_location)
+     VALUES ('${url_id}', '${url_id}');
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
+function db_send_notification() {
+  local comp_id="${1}"
+  declare -a l_tosend=()
+  
+  send_id=`echo "
+SELECT acl.id_telegram_lov_notification
+  FROM adv_completion_list acl
+ WHERE 1 = 1
+       AND acl.id = ${comp_id}
+ LIMIT 1;
+" | sqlite3 "${C_DB_FILE}"`
+
+  # decision already made
+  if [[ ${send_id} -ne 1 ]]; then
+    return 1
+  fi
+  
+  l_tosend=(`echo "
+SELECT al.location, au.url
+  FROM adv_completion_list acl
+  JOIN adv_urls au      ON au.id = acl.id_adv_url
+  JOIN adv_locations al ON al.id = acl.id_adv_location
+ WHERE 1 = 1
+       AND acl.id = ${comp_id}
+       AND acl.id_telegram_lov_notification = ${send_id} -- id_telegram_lov_notification = 1
+ LIMIT 1;
+" | sqlite3 "${C_DB_FILE}"`)
+
+  echo ${l_tosend[@]}
+  return 0
+}
 
 function db_get() {
   local rec_table="${1}"
@@ -210,6 +276,21 @@ SELECT ${rec_column}
 
   echo "${res}"
   return 0
+}
+
+function send_telegram() {
+  local bot_id="${1}"
+  local channel_id="${2}"
+  local location="${3}"
+  local url="${4}"
+  
+  res=`curl -X POST \
+     -H 'Content-Type: application/json' \
+     -d '{"chat_id": "${channel_id}", "text": "${location}\n${url}", "disable_notification": false}' \
+     https://api.telegram.org/${bot_id}/sendMessage \
+  | jq -r '.ok'`
+  
+  echo ${res}
 }
 
 ##M   ##
@@ -280,7 +361,18 @@ do
     url_id=`db_url_insert "${link}" "${link_sha256sum}"`
   fi
   
+  completion_id=`db_completionlist_recid "${loc_id}" "${url_id}"`
+  if [[ $? -ne 0 ]]; then
+    completion_id=`db_completionlist_insert "${loc_id}" "${url_id}"`
+  fi
   
+  l_tosend=(`db_send_notification "${completion_id}"`)
+  send_loc="${l_tosend[0]}"
+  send_url="${l_tosend[1]}"
+  send_tele_botid=`get_db "config_telegram" "bot_id" "name = 'Amalka'"`
+  send_tele_channelid=`get_db "config_telegram" "channel_id" "name = 'Amalka'"`
+  
+  send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
