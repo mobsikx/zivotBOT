@@ -369,8 +369,8 @@ do
   l_tosend=(`db_send_notification "${completion_id}"`)
   send_loc="${l_tosend[0]}"
   send_url="${l_tosend[1]}"
-  send_tele_botid=`get_db "config_telegram" "bot_id" "name = 'Amalka'"`
-  send_tele_channelid=`get_db "config_telegram" "channel_id" "name = 'Amalka'"`
+  send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
+  send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
   
   send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
   
