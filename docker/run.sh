@@ -229,7 +229,8 @@ l_links=(`grep -ioE '<a ng-href="/detail.* ng-click="' ${C_LIST_FILE} | cut -f 2
 idx=0
 for l in ${l_links[@]}
 do
-  link_sha256sum=$(echo -n "https://sreality.cz${l}" | sha256sum -t | awk '{ print $1 }')
+  link="https://sreality.cz${l}"
+  link_sha256sum=$(echo -n "${link}" | sha256sum -t | awk '{ print $1 }')
   google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
   loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
   loc_sha256sum=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
@@ -276,7 +277,7 @@ do
 
   url_id=`db_url_recid "${link_sha256sum}"`
   if [[ $? -ne 0 ]]; then
-    url_id=`db_url_insert "${l}" "${link_sha256sum}"`
+    url_id=`db_url_insert "${link}" "${link_sha256sum}"`
   fi
   
   
