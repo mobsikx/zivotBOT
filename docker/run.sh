@@ -195,7 +195,7 @@ do
     loc_id=`db_location_insert "${loc}" "${sha_loc}"`
   fi
 
-  travel_location_id=`db_traveltime_recid "${loc_id}"`
+  traveltime_id=`db_traveltime_recid "${loc_id}"`
   if [[ $? -ne 0 ]]; then
     for loc_to in ${l_locs_to[@]}
     do
