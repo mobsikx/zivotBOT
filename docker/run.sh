@@ -370,7 +370,7 @@ do
     completion_id=`db_completionlist_insert "${loc_id}" "${url_id}"`
   fi
   
-  IFS=$'\n'
+  IFS=$'|'
   l_tosend=(`db_send_notification "${completion_id}"`)
   send_loc="${l_tosend[0]}"
   send_url="${l_tosend[1]}"
