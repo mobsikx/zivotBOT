@@ -104,7 +104,7 @@ function db_traveltime_recid() {
 SELECT tt.id
   FROM travel_locations tl
   JOIN adv_locations al ON al.id = tl.id_adv_location
-  JOIN travel_times tt  ON tt.id = tl.id_adv_location
+  JOIN travel_times tt  ON tt.id = tl.id_travel_time
  WHERE 1 = 1
        AND al.id = '${loc_id}'
  LIMIT 1;
@@ -134,11 +134,11 @@ function db_travellocation_recid() {
   local time_id="${2}"
 
   res=`echo "
-SELECT id
-  FROM travel_locations
+SELECT tl.id
+  FROM travel_locations tl
  WHERE 1 = 1
-       AND id_adv_location = ${loc_id}
-       AND id_travel_time = ${time_id}
+       AND tl.id_adv_location = ${loc_id}
+       AND tl.id_travel_time = ${time_id}
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
   if [ -z ${res} ]; then return 1; fi # not such a record in the db
