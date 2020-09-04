@@ -81,6 +81,21 @@ SELECT al.id
   return 0
 }
 
+function db_location_insert() {
+  local loc="${1}"
+  local hash="${2}"
+
+  last_id=`echo "
+INSERT INTO adv_locations (location, location_hash)
+     VALUES ('${loc}', '${hash}');
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
 function db_traveltime_recid() {
   local loc_id="${1}"
 
@@ -100,6 +115,20 @@ SELECT tt.id
   return 0
 }
 
+function db_traveltime_insert() {
+  local minimum="${1}"
+
+ last_id=`echo "
+INSERT INTO travel_times (minimum)
+     VALUES (${minimum});
+
+SELECT last_insert_rowid();
+" | sqlite3 "${C_DB_FILE}"`
+
+  echo ${last_id}
+  return
+}
+
 function db_travellocation_recid() {
   local loc_id="${1}"
   local time_id="${2}"
@@ -116,35 +145,6 @@ SELECT id
 
   echo "${res}"
   return 0
-}
-
-function db_location_insert() {
-  local loc="${1}"
-  local hash="${2}"
-
-  last_id=`echo "
-INSERT INTO adv_locations (location, location_hash)
-     VALUES ('${loc}', '${hash}');
-
-SELECT last_insert_rowid();
-" | sqlite3 "${C_DB_FILE}"`
-
-  echo ${last_id}
-  return
-}
-
-function db_traveltimeminimum_insert() {
-  local minimum="${1}"
-
- last_id=`echo "
-INSERT INTO travel_times (minimum)
-     VALUES (${minimum});
-
-SELECT last_insert_rowid();
-" | sqlite3 "${C_DB_FILE}"`
-
-  echo ${last_id}
-  return
 }
 
 function db_travellocation_insert() {
@@ -169,24 +169,24 @@ SELECT last_insert_rowid();
 rm -f /app/tmp/*
 
 # ziskej prehled inzeratu
-google-chrome --no-sandbox --headless --disable-gpu --dump-dom 'https://www.sreality.cz/hledani/prodej/domy/rodinne-domy,vily,chalupy,pamatky-jine,zemedelske-usedlosti/stredocesky-kraj?pois_in_place_distance=1.5&per_page=100&pois_in_place=1%7C2&navic=samostatny&stav=po-rekonstrukci,novostavby,dobry-stav,velmi-dobry-stav&plocha-od=90&plocha-do=10000000000&cena-od=0&cena-do=5000000&plocha-pozemku-od=0&plocha-pozemku-od=500&plocha-pozemku-do=2000&bez-aukce=1' > ${C_LIST_FILE} 2>/dev/null
+google-chrome --headless --disable-gpu --dump-dom 'https://www.sreality.cz/hledani/prodej/domy/rodinne-domy,vily,chalupy,pamatky-jine,zemedelske-usedlosti/stredocesky-kraj?pois_in_place_distance=1.5&per_page=100&pois_in_place=1%7C2&navic=samostatny&stav=po-rekonstrukci,novostavby,dobry-stav,velmi-dobry-stav&plocha-od=90&plocha-do=10000000000&cena-od=0&cena-do=5000000&plocha-pozemku-od=0&plocha-pozemku-od=500&plocha-pozemku-do=2000&bez-aukce=1' > ${C_LIST_FILE} 2>/dev/null
 
 # postahuj detaily inzeratu
 l_links=(`grep -ioE '<a ng-href="/detail.* ng-click="' ${C_LIST_FILE} | cut -f 2 -d '"' | sort -u`)
 idx=0
-for l in ${l_links[@]}
+for l in ${l_links[@]}id_travel_time
 do
   sha_link=$(echo -n "https://sreality.cz${l}" | sha256sum -t | awk '{ print $1 }')
-  google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
+  google-chrome --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
   loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
-  sha_loc=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
+  loc_sha256sum=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
   
   loc_from=`strip_location "${loc}"`
   loc_from=`uriencode "${loc_from}"`
  
-  loc_id=`db_location_recid "${sha_loc}"`
+  loc_id=`db_location_recid "${loc_sha256sum}"`
   if [[ $? -ne 0 ]]; then
-    loc_id=`db_location_insert "${loc}" "${sha_loc}"`
+    loc_id=`db_location_insert "${loc}" "${loc_sha256sum}"`
   fi
 
   traveltime_id=`db_traveltime_recid "${loc_id}"`
@@ -208,7 +208,7 @@ do
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
-    traveltime_id=`db_traveltimeminimum_insert ${travel_minutes_minimum}`
+    traveltime_id=`db_traveltime_insert ${travel_minutes_minimum}`
   fi
 
   travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
