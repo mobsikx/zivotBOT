@@ -174,9 +174,9 @@ google-chrome --no-sandbox --headless --disable-gpu --dump-dom 'https://www.srea
 # postahuj detaily inzeratu
 l_links=(`grep -ioE '<a ng-href="/detail.* ng-click="' ${C_LIST_FILE} | cut -f 2 -d '"' | sort -u`)
 idx=0
-for l in ${l_links[@]}id_travel_time
+for l in ${l_links[@]}
 do
-  sha_link=$(echo -n "https://sreality.cz${l}" | sha256sum -t | awk '{ print $1 }')
+  link_sha256sum=$(echo -n "https://sreality.cz${l}" | sha256sum -t | awk '{ print $1 }')
   google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
   loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
   loc_sha256sum=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
