@@ -126,9 +126,7 @@ function db_location_insert() {
 INSERT INTO adv_locations (location, location_hash)
      VALUES ('${loc}', '${hash}');
 
-SELECT last_insert_rowid()
-  FROM adv_locations
- LIMIT 1;
+SELECT last_insert_rowid();
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
@@ -142,9 +140,7 @@ function db_traveltimeminimum_insert() {
 INSERT INTO travel_times (minimum)
      VALUES (${minimum});
 
-SELECT last_insert_rowid()
-  FROM travel_times
- LIMIT 1;
+SELECT last_insert_rowid();
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
@@ -159,9 +155,7 @@ function db_travellocation_insert() {
 INSERT INTO travel_locations (id_adv_location, id_travel_times)
      VALUES (${loc_id}, ${time_id});
 
-SELECT last_insert_rowid()
-  FROM travel_locations
- LIMIT 1;
+SELECT last_insert_rowid();
 " | sqlite3 "${C_DB_FILE}"`
 
   echo ${last_id}
