@@ -156,7 +156,7 @@ function db_travellocation_insert() {
   local time_id="${2}"
 
   last_id=`echo "
-INSERT INTO travel_locations ()
+INSERT INTO travel_locations (id_adv_location, id_travel_times)
      VALUES (${loc_id}, ${time_id});
 
 SELECT last_insert_rowid()
