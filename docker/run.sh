@@ -245,8 +245,8 @@ SELECT acl.id_telegram_lov_notification
     return 1
   fi
   
-  l_tosend=`echo "
-SELECT al.location + "#" + au.url
+  tosend=`echo "
+SELECT al.location, au.url
   FROM adv_completion_list acl
   JOIN adv_urls au      ON au.id = acl.id_adv_url
   JOIN adv_locations al ON al.id = acl.id_adv_location
@@ -256,7 +256,7 @@ SELECT al.location + "#" + au.url
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
-  echo ${l_tosend}
+  echo ${tosend}
   return 0
 }
 
