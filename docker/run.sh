@@ -362,15 +362,14 @@ do
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
-    l_travel_minutes=()
-    idx=$(( ${idx} + 1))
-    
     if [ -z "${travel_minutes_minimum}" ]; then
       continue
     fi
     
     traveltime_id=`db_traveltime_insert ${travel_minutes_minimum}`
   fi
+  l_travel_minutes=()
+  idx=$(( ${idx} + 1))
 
   travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
   if [[ $? -ne 0 ]]; then
