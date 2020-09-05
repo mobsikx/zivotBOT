@@ -288,13 +288,13 @@ function send_telegram() {
   -H 'Content-Type: application/json'
   -d '{\"chat_id\": \"${channel_id}\", \"text\": \"${location}\n${url}\", \"disable_notification\": false}'
   https://api.telegram.org/${bot_id}/sendMessage"
-  #res=`curl -sfk -X POST \
-  #   -H 'Content-Type: application/json' \
-  #   -d '{"chat_id": "${channel_id}", "text": "${location}\n${url}", "disable_notification": false}' \
-  #   https://api.telegram.org/${bot_id}/sendMessage \
-  #| jq -r '.ok'`
+  res=`curl -fk -X POST \
+     -H 'Content-Type: application/json' \
+     -d '{"chat_id": "${channel_id}", "text": "${location}\n${url}", "disable_notification": false}' \
+     https://api.telegram.org/${bot_id}/sendMessage \
+  | jq -r '.ok'`
   
-  #echo ${res}
+  echo ${res}
 }
 
 ##M   ##
