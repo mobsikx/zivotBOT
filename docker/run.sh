@@ -357,13 +357,14 @@ do
     l_travel_times=(`cat /app/tmp/idos-${idx}.dump | grep -oiE 'Celkový čas.*(hod|min)' | cut -f 2 -d '>'`)
     for travel_time in ${l_travel_times[@]}
     do
-      l_travel_minutes+=(`travel_minutes "${travel_time}"`)
+      l_travel_minutes=(`travel_minutes "${travel_time}"`)
     done
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
     
     if [ -z ${travel_minutes_minimum} ]; then
+     # l_travel_minutes=()
       continue
     fi
     
@@ -387,6 +388,7 @@ do
   
   tosend=`db_send_notification "${completion_id}"`
   if [ -z ${tosend} ]; then
+   # l_travel_minutes=()
     db_update_sendstatus "${completion_id}" 3
     continue
   fi
@@ -403,7 +405,7 @@ do
   fi
   
   idx=$(( ${idx} + 1))
-  l_travel_minutes=()
+ # l_travel_minutes=()
 done
 
 exit 0
