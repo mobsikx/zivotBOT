@@ -363,9 +363,9 @@ do
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
     l_travel_minutes=()
+    idx=$(( ${idx} + 1))
     
     if [ -z "${travel_minutes_minimum}" ]; then
-      idx=$(( ${idx} + 1))
       continue
     fi
     
@@ -390,7 +390,6 @@ do
   tosend=`db_send_notification "${completion_id}"`
   if [ -z "${tosend}" ]; then
     db_update_sendstatus "${completion_id}" 3
-    idx=$(( ${idx} + 1))
     continue
   fi
   
@@ -404,8 +403,6 @@ do
   if [[ $? -eq 0 ]]; then
     db_update_sendstatus "${completion_id}" 2
   fi
-  
-  idx=$(( ${idx} + 1))
 done
 
 exit 0
