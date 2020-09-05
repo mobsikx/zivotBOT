@@ -14,7 +14,6 @@ declare -a l_station_types=("200003" "100003")
 declare -a l_links=()
 declare -a l_travel_times=()
 declare -a l_travel_minutes=()
-declare -a l_tosend=()
 
 ##F        ##
 # Functions #
@@ -246,8 +245,8 @@ SELECT acl.id_telegram_lov_notification
     return 1
   fi
   
-  l_tosend=(`echo "
-SELECT al.location, au.url
+  l_tosend=`echo "
+SELECT al.location + "#" + au.url
   FROM adv_completion_list acl
   JOIN adv_urls au      ON au.id = acl.id_adv_url
   JOIN adv_locations al ON al.id = acl.id_adv_location
@@ -255,9 +254,9 @@ SELECT al.location, au.url
        AND acl.id = ${comp_id}
        AND acl.id_telegram_lov_notification = ${send_id} -- id_telegram_lov_notification = 1
  LIMIT 1;
-" | sqlite3 "${C_DB_FILE}"`)
+" | sqlite3 "${C_DB_FILE}"`
 
-  echo ${l_tosend[@]}
+  echo ${l_tosend}
   return 0
 }
 
@@ -370,11 +369,9 @@ do
     completion_id=`db_completionlist_insert "${loc_id}" "${url_id}"`
   fi
   
-  IFS='|'
-  l_tosend=(`db_send_notification "${completion_id}"`)
-  send_loc="${l_tosend[0]}"
-  send_url="${l_tosend[1]}"
-  unset IFS
+  tosend=`db_send_notification "${completion_id}"`
+  send_loc=`echo "${l_tosend}" | cut -f 1 -d '|'`
+  send_url=`echo "${l_tosend}" | cut -f 2 -d '|'`
   
   send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
   send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
