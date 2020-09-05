@@ -397,19 +397,18 @@ do
   tosend=`db_send_notification "${completion_id}"`
   if [ -z "${tosend}" ]; then
     db_update_sendstatus "${completion_id}" 3
-    continue
-  fi
+  else
+    # send message to a telegram channel
+    send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
+    send_url=`echo "${tosend}" | cut -f 2 -d '|'`
   
-  # send message to a telegram channel
-  send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
-  send_url=`echo "${tosend}" | cut -f 2 -d '|'`
+    send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
+    send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
   
-  send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
-  send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
-  
-  send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
-  if [[ $? -eq 0 ]]; then
-    db_update_sendstatus "${completion_id}" 2
+    send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
+    if [[ $? -eq 0 ]]; then
+      db_update_sendstatus "${completion_id}" 2
+    fi
   fi
 done
 
