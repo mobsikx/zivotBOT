@@ -230,7 +230,6 @@ SELECT last_insert_rowid();
 
 function db_send_notification() {
   local comp_id="${1}"
-  declare -a l_tosend=()
   
   send_id=`echo "
 SELECT acl.id_telegram_lov_notification
@@ -263,6 +262,20 @@ SELECT al.location, au.url
   return 0
 }
 
+function db_update_sendstatus() {
+  local comp_id="${1}"
+  local send_stat="${2}"
+  
+  echo "
+UPDATE adv_completion_list
+   SET id_telegram_lov_notification = ${send_stat}
+ WHERE 1 = 1
+       AND id = ${comp_id};
+" | sqlite3 "${C_DB_FILE}"
+
+  return
+}
+
 function db_get() {
   local rec_table="${1}"
   local rec_column="${2}"
@@ -292,7 +305,11 @@ function send_telegram() {
      "https://api.telegram.org/${bot_id}/sendMessage" \
   | jq -r '.ok'`
   
-  echo ${res}
+  if ! ${res}; then
+    return 1
+  fi
+  
+  return 0
 }
 
 ##M   ##
@@ -370,6 +387,7 @@ do
   
   tosend=`db_send_notification "${completion_id}"`
   if [ -z ${tosend} ]; then
+    db_update_sendstatus "${completion_id}" 3
     continue
   fi
   
@@ -380,6 +398,9 @@ do
   send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
   
   send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
+  if [[ $? -eq 0 ]]; then
+    db_update_sendstatus "${completion_id}" 2
+  fi
   
   idx=$(( ${idx} + 1))
   l_travel_minutes=()
