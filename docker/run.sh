@@ -362,9 +362,9 @@ do
     unset IFS
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
+    l_travel_minutes=()
     
-    if [ -z ${travel_minutes_minimum} ]; then
-      l_travel_minutes=()
+    if [ -z "${travel_minutes_minimum}" ]; then
       continue
     fi
     
@@ -387,8 +387,7 @@ do
   fi
   
   tosend=`db_send_notification "${completion_id}"`
-  if [ -z ${tosend} ]; then
-    l_travel_minutes=()
+  if [ -z "${tosend}" ]; then
     db_update_sendstatus "${completion_id}" 3
     continue
   fi
@@ -401,12 +400,10 @@ do
   
   send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
   if [[ $? -eq 0 ]]; then
-    l_travel_minutes=()
     db_update_sendstatus "${completion_id}" 2
   fi
   
   idx=$(( ${idx} + 1))
-  l_travel_minutes=()
 done
 
 exit 0
