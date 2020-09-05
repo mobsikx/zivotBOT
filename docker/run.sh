@@ -248,11 +248,14 @@ SELECT acl.id_telegram_lov_notification
   tosend=`echo "
 SELECT al.location, au.url
   FROM adv_completion_list acl
-  JOIN adv_urls au      ON au.id = acl.id_adv_url
-  JOIN adv_locations al ON al.id = acl.id_adv_location
+  JOIN adv_urls au         ON au.id = acl.id_adv_url
+  JOIN adv_locations al    ON al.id = acl.id_adv_location
+  JOIN travel_locations tl ON tl.id = acl.id_adv_location
+  JOIN travel_times tt     ON tt.id = tl.id_travel_time
  WHERE 1 = 1
        AND acl.id = ${comp_id}
        AND acl.id_telegram_lov_notification = ${send_id} -- id_telegram_lov_notification = 1
+       AND tt.minimum <= 60
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
@@ -366,6 +369,10 @@ do
   fi
   
   tosend=`db_send_notification "${completion_id}"`
+  if [ -z ${tosend} ]; then
+    continue
+  fi
+  
   send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
   send_url=`echo "${tosend}" | cut -f 2 -d '|'`
   
