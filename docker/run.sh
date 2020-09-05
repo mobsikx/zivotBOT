@@ -367,18 +367,13 @@ do
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
     if [ -z "${travel_minutes_minimum}" ]; then
-      l_travel_minutes=()
-      idx=$(( ${idx} + 1))
-      
-      echo ${idx}
-      continue
+      travel_minutes_minimum=99999
     fi
     
     traveltime_id=`db_traveltime_insert ${travel_minutes_minimum}`
   fi
   l_travel_minutes=()
   idx=$(( ${idx} + 1))
-  echo ${idx}
 
   # travel location ID
   travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
