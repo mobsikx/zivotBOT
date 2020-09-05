@@ -370,8 +370,8 @@ do
   fi
   
   tosend=`db_send_notification "${completion_id}"`
-  send_loc=`echo "${l_tosend}" | cut -f 1 -d '|'`
-  send_url=`echo "${l_tosend}" | cut -f 2 -d '|'`
+  send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
+  send_url=`echo "${tosend}" | cut -f 2 -d '|'`
   
   send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
   send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
