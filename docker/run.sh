@@ -340,11 +340,13 @@ do
   loc_from=`strip_location "${loc}"`
   loc_from=`uriencode "${loc_from}"`
  
+  # location ID
   loc_id=`db_location_recid "${loc_sha256sum}"`
   if [[ $? -ne 0 ]]; then
     loc_id=`db_location_insert "${loc}" "${loc_sha256sum}"`
   fi
 
+  # travel time ID
   traveltime_id=`db_traveltime_recid "${loc_id}"`
   if [[ $? -ne 0 ]]; then
     for loc_to in ${l_locs_to[@]}
@@ -367,6 +369,8 @@ do
     if [ -z "${travel_minutes_minimum}" ]; then
       l_travel_minutes=()
       idx=$(( ${idx} + 1))
+      
+      echo ${idx}
       continue
     fi
     
@@ -374,28 +378,34 @@ do
   fi
   l_travel_minutes=()
   idx=$(( ${idx} + 1))
+  echo ${idx}
 
+  # travel location ID
   travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
   if [[ $? -ne 0 ]]; then
     travel_location_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
   fi
 
+  # URL ID
   url_id=`db_url_recid "${link_sha256sum}"`
   if [[ $? -ne 0 ]]; then
     url_id=`db_url_insert "${link}" "${link_sha256sum}"`
   fi
   
+  # completion ID
   completion_id=`db_completionlist_recid "${loc_id}" "${url_id}"`
   if [[ $? -ne 0 ]]; then
     completion_id=`db_completionlist_insert "${loc_id}" "${url_id}"`
   fi
   
+  # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
   if [ -z "${tosend}" ]; then
     db_update_sendstatus "${completion_id}" 3
     continue
   fi
   
+  # send message to a telegram channel
   send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
   send_url=`echo "${tosend}" | cut -f 2 -d '|'`
   
