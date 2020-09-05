@@ -331,7 +331,9 @@ for l in ${l_links[@]}
 do
   link="https://sreality.cz${l}"
   link_sha256sum=$(echo -n "${link}" | sha256sum -t | awk '{ print $1 }')
+  
   google-chrome --no-sandbox --headless --disable-gpu --dump-dom https://sreality.cz${l} > "/app/tmp/detail-${idx}.dump" 2>/dev/null
+  
   loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
   loc_sha256sum=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
   
@@ -363,6 +365,8 @@ do
  
     travel_minutes_minimum=`find_minimum "${l_travel_minutes[@]}"`
     if [ -z "${travel_minutes_minimum}" ]; then
+      l_travel_minutes=()
+      idx=$(( ${idx} + 1))
       continue
     fi
     
