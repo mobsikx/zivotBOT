@@ -219,7 +219,7 @@ function db_completionlist_insert() {
   
   last_id=`echo "
 INSERT INTO adv_completion_list (id_adv_url, id_adv_location)
-     VALUES ('${url_id}', '${url_id}');
+     VALUES (${url_id}, ${loc_id});
 
 SELECT last_insert_rowid();
 " | sqlite3 "${C_DB_FILE}"`
@@ -337,6 +337,10 @@ do
   loc=$(grep -oiE '<span class="location-text ng-binding">.*</span>' "/app/tmp/detail-${idx}.dump" | cut -f 2 -d '>' | cut -f 1 -d '<')
   loc_sha256sum=$(echo -n "${loc}" | sha256sum -t | awk '{ print $1 }')
   
+  echo -e "\n========================================"
+  echo "DEBUG ### loc: ${loc}"
+  echo "DEBUG ### sum: ${loc_sha256sum}"
+  
   loc_from=`strip_location "${loc}"`
   loc_from=`uriencode "${loc_from}"`
  
@@ -345,6 +349,8 @@ do
   if [[ $? -ne 0 ]]; then
     loc_id=`db_location_insert "${loc}" "${loc_sha256sum}"`
   fi
+  
+  echo "DEBUG ### loc_id: ${loc_id}"
 
   # travel time ID
   traveltime_id=`db_traveltime_recid "${loc_id}"`
@@ -373,25 +379,30 @@ do
     traveltime_id=`db_traveltime_insert ${travel_minutes_minimum}`
   fi
   l_travel_minutes=()
-  idx=$(( ${idx} + 1))
+  echo "DEBUG ### traveltime_id: ${traveltime_id}"
 
   # travel location ID
   travel_location_id=`db_travellocation_recid ${loc_id} ${traveltime_id}`
   if [[ $? -ne 0 ]]; then
     travel_location_id=`db_travellocation_insert ${loc_id} ${traveltime_id}`
   fi
+  echo "DEBUG ### travel_location_id: ${travel_location_id}"
 
   # URL ID
   url_id=`db_url_recid "${link_sha256sum}"`
   if [[ $? -ne 0 ]]; then
     url_id=`db_url_insert "${link}" "${link_sha256sum}"`
   fi
+  echo "DEBUG ### url_id: ${url_id}"
   
   # completion ID
+  echo "DEBUG ### completion_id=db_completionlist_recid \"${loc_id}\" \"${url_id}\""
   completion_id=`db_completionlist_recid "${loc_id}" "${url_id}"`
   if [[ $? -ne 0 ]]; then
+    echo "DEBUG ### completion_id=db_completionlist_insert \"${loc_id}\" \"${url_id}\""
     completion_id=`db_completionlist_insert "${loc_id}" "${url_id}"`
   fi
+  echo "DEBUG ### completion_id: ${completion_id}"
   
   # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
@@ -410,6 +421,8 @@ do
       db_update_sendstatus "${completion_id}" 2
     fi
   fi
+  
+  idx=$(( ${idx} + 1))
 done
 
 exit 0
