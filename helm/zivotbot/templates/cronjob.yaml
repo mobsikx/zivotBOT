@@ -1,0 +1,24 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: zivotbot-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: zivotbot
+            image: quay.io/cceshop/zivotbot:0.1.1
+            volumeMounts:
+            - name: sqlite3-storage
+              mountPath: /app/db/zivotbot.db
+              readOnly: false
+          volumes:
+          - name: sqlite3-storage
+            hostPath:
+              path: /opt/zivotbot/db/zivotbot.db
+              type: File
+          restartPolicy: OnFailure
