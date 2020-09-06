@@ -415,7 +415,8 @@ do
   
   # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
-  if [[ ${err} -eq 0 ]]; then 
+  tosend_err=$?
+  if [[ ${tosend_err} -eq 0 ]]; then 
     if [ -z "${tosend}" ]; then
       db_update_sendstatus "${completion_id}" 3
     else
