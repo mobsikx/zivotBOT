@@ -19,7 +19,8 @@ RUN apt-get update \
     && apt-get -y install /tmp/google-chrome.deb \
     && apt-get update \
     && apt-get -y --allow-unauthenticated upgrade \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /tmp/google-chrome.deb
 
 RUN useradd -ms /bin/bash zivotbot \
     && mkdir -p /app/bin \
