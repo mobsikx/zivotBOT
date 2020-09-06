@@ -66,6 +66,7 @@ function find_minimum() {
 
 function db_location_recid() {
   local hash="${1}"
+  local res=""
 
   res=`echo "
 -- check if we have the location info for that location
@@ -84,6 +85,7 @@ SELECT al.id
 function db_location_insert() {
   local loc="${1}"
   local hash="${2}"
+  local last_id=""
 
   last_id=`echo "
 INSERT INTO adv_locations (location, location_hash)
@@ -98,6 +100,7 @@ SELECT last_insert_rowid();
 
 function db_traveltime_recid() {
   local loc_id="${1}"
+  local res=""
 
   res=`echo "
 -- check if we have the travel info for that location
@@ -117,6 +120,7 @@ SELECT tt.id
 
 function db_traveltime_insert() {
   local minimum="${1}"
+  local last_id=""
 
  last_id=`echo "
 INSERT INTO travel_times (minimum)
@@ -132,6 +136,7 @@ SELECT last_insert_rowid();
 function db_travellocation_recid() {
   local loc_id="${1}"
   local time_id="${2}"
+  local res=""
 
   res=`echo "
 SELECT tl.id
@@ -150,6 +155,7 @@ SELECT tl.id
 function db_travellocation_insert() {
   local loc_id="${1}"
   local time_id="${2}"
+  local last_id=""
 
   last_id=`echo "
 INSERT INTO travel_locations (id_adv_location, id_travel_time)
@@ -164,6 +170,7 @@ SELECT last_insert_rowid();
 
 function db_url_recid() {
   local hash="${1}"
+  local res=""
 
   res=`echo "
 -- check if we have the location info for that location
@@ -197,6 +204,7 @@ SELECT last_insert_rowid();
 function db_completionlist_recid() {
   local loc_id="${1}"
   local url_id="${2}"
+  local res=""
   
   res=`echo "
 SELECT acl.id
@@ -230,6 +238,8 @@ SELECT last_insert_rowid();
 
 function db_send_notification() {
   local comp_id="${1}"
+  local send_id=""
+  local tosend=""
   
   send_id=`echo "
 SELECT acl.id_telegram_lov_notification
