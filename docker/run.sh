@@ -406,8 +406,11 @@ do
   
   # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
+  err=$?
   if [ -z "${tosend}" ]; then
-    db_update_sendstatus "${completion_id}" 3
+    if [[ ${err} -ne 0 ]]; then 
+      db_update_sendstatus "${completion_id}" 3
+    fi
   else
     # send message to a telegram channel
     send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
