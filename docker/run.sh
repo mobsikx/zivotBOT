@@ -246,7 +246,6 @@ SELECT acl.id_telegram_lov_notification
   FROM adv_completion_list acl
  WHERE 1 = 1
        AND acl.id = ${comp_id}
-       AND acl.id_telegram_lov_notification <> 1
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
@@ -264,6 +263,7 @@ SELECT al.location, au.url
   JOIN travel_times tt     ON tt.id = tl.id_travel_time
  WHERE 1 = 1
        AND acl.id = ${comp_id}
+       AND acl.id_telegram_lov_notification = 1
        AND tt.minimum <= 60
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`

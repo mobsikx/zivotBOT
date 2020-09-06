@@ -4,7 +4,7 @@ kind: CronJob
 metadata:
   name: zivotbot-cronjob
 spec:
-  schedule: "0 */3 * * *"
+  schedule: "*/2 * * * *"
   jobTemplate:
     spec:
       template:
