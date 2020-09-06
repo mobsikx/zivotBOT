@@ -16,7 +16,7 @@ RUN apt-get update \
                     sqlite3 \
                     tini \
     && curl -sfk https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb -o /tmp/google-chrome.deb \
-    && apt-get -y install /tmp/google-chrome.deb \
+    && apt-get -y --allow-unauthenticated install /tmp/google-chrome.deb \
     && apt-get update \
     && apt-get -y --allow-unauthenticated upgrade \
     && rm -rf /var/lib/apt/lists/* \
