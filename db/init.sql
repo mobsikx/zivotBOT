@@ -65,8 +65,7 @@ CREATE TABLE IF NOT EXISTS travel_times (
 -- ====================================
 
 INSERT OR REPLACE INTO config_telegram (id, name, bot_id, channel_id)
-                VALUES (1, "Amalka", "bot1302263842:AAHPyLeCMfOcj1qxS8f9RqdLtmizOtqzvog", "-1001450421856");
-
+                VALUES (1, "Amalka", "bot1302263842:AAHPyLeCMfOcj1qxS8f9RqdLtmizOtqzvog", "-1001361596126");
 INSERT OR REPLACE INTO config_advertisement (id, name, url)
                 VALUES (1, 'search_sreality', 'https://www.sreality.cz/hledani/prodej/domy/pamatky-jine,rodinne-domy,vily,chalupy,zemedelske-usedlosti/stredocesky-kraj?per_page=1000&stav=po-rekonstrukci,novostavby,dobry-stav,velmi-dobry-stav&plocha-od=90&plocha-do=10000000000&cena-od=0&cena-do=5000000&plocha-pozemku-od=500&plocha-pozemku-do=2000&bez-aukce=1');
 
