@@ -13,6 +13,8 @@ spec:
         - name: sqlite3-storage
           mountPath: /app/db/zivotbot.db
           readOnly: false
+      command: ["/bin/bash"]
+      args: ["-c", "sleep 100000"]
   volumes:
     - name: sqlite3-storage
       hostPath:

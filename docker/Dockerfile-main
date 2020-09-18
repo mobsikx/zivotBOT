@@ -26,7 +26,7 @@ RUN useradd -ms /bin/bash zivotbot \
     && mkdir -p /app/bin \
                 /app/db \
                 /app/tmp
-COPY ./run.sh /app/bin/run.sh
+COPY ./scripts/main/run.sh /app/bin/run.sh
 RUN  chmod +x /app/bin/run.sh \
      && chown -R zivotbot:zivotbot /app
 
