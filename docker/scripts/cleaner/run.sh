@@ -7,7 +7,7 @@ readonly C_DB_FILE="/app/db/zivotbot.db"
 
 declare -a l_records=(`echo "
 --
-SELECT acl.id, au.id, tl.id
+SELECT acl.id, au.id
   FROM adv_completion_list acl
   JOIN adv_urls au         ON au.id = acl.id_adv_url;
 " | sqlite3 ${C_DB_FILE}`)
