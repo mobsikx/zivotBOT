@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zivotbot-cleaner-manual
+  labels:
+    role: myrole
+spec:
+  containers:
+    - name: zivotbot-cleaner
+      image: quay.io/cceshop/zivotbot-cleaner:0.0.2
+      volumeMounts:
+        - name: sqlite3-storage
+          mountPath: /app/db/zivotbot.db
+          readOnly: false
+      command: ["/bin/bash"]
+      args: ["-c", "sleep 100000"]
+  volumes:
+    - name: sqlite3-storage
+      hostPath:
+        path: /opt/zivotbot/db/zivotbot.db
+        type: File
+  restartPolicy: OnFailure
