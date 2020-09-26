@@ -23,11 +23,13 @@ function update_time_minimum() {
   echo "
 UPDATE travel_times
    SET minimum = ${t_min}
- WHERE id = (
+ WHERE id = ( 
               SELECT tt.id
                 FROM adv_completion_list acl
-                JOIN travel_locations tl ON tl.id_adv_location = acl.id_adv_location
-                JOIN travel_times tt     ON tt.id              = tl.id_travel_time
+                JOIN adv_urls au         ON au.id = acl.id_adv_url
+                JOIN adv_locations al    ON al.id = acl.id_adv_location
+                JOIN travel_locations tl ON tl.id = acl.id_adv_location
+                JOIN travel_times tt     ON tt.id = tl.id_travel_time
                WHERE acl.id = ${id}
             );
 " | sqlite3 /opt/zivotbot/db/zivotbot.db
