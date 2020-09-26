@@ -10,7 +10,7 @@ do
   echo
   echo "
 --
-SELECT acl.id, al.location, au.url, acl.id_telegram_lov_notification, tt.minimum
+SELECT acl.id, al.location, al.id, au.url, acl.id_telegram_lov_notification, tt.minimum, tt.id
   FROM adv_completion_list acl
   JOIN adv_urls au         ON au.id = acl.id_adv_url
   JOIN adv_locations al    ON al.id = acl.id_adv_location
