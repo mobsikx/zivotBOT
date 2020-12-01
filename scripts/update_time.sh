@@ -6,10 +6,12 @@ C_TIME_MIN="${2}"
 
 function update_send_status() {
   local id="${1}"
+  local status="${2}"
+
 
   echo "
 UPDATE adv_completion_list
-   SET id_telegram_lov_notification = 1
+   SET id_telegram_lov_notification = ${status}
  WHERE id = ${id};
 " | sqlite3 /opt/zivotbot/db/zivotbot.db
 
@@ -38,7 +40,9 @@ UPDATE travel_times
 }
 
 if [[ ${C_TIME_MIN} -le 60 ]]; then
-  update_send_status "${C_COMPL_ID}"
+  update_send_status "${C_COMPL_ID}" 1
+else
+  update_send_status "${C_COMPL_ID}" 3
 fi
 
 update_time_minimum "${C_COMPL_ID}" "${C_TIME_MIN}"
