@@ -4,7 +4,19 @@
 C_COMPL_ID="${1}"
 C_TIME_MIN="${2}"
 
-function update_send_status() {
+function get_send_status() {
+  local id="${1}"
+
+  echo "
+SELECT id_telegram_lov_notification
+  FROM adv_completion_list
+ WHERE id = ${id};
+" | sqlite3 /opt/zivotbot/db/zivotbot.db
+
+  return
+}
+
+function set_send_status() {
   local id="${1}"
   local status="${2}"
 
@@ -40,9 +52,11 @@ UPDATE travel_times
 }
 
 if [[ ${C_TIME_MIN} -le 60 ]]; then
-  update_send_status "${C_COMPL_ID}" 1
+  if [[ $(get_send_status "${C_COMPL_ID}") -ne 2 ]]; then
+    set_send_status "${C_COMPL_ID}" 1
+  fi
 else
-  update_send_status "${C_COMPL_ID}" 3
+  set_send_status "${C_COMPL_ID}" 3
 fi
 
 update_time_minimum "${C_COMPL_ID}" "${C_TIME_MIN}"
