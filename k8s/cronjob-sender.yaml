@@ -2,16 +2,16 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: zivotbot-cronjob
+  name: zivotbot-sender-cronjob
 spec:
-  schedule: "0 * * * *"
+  schedule: "30 7,21 * * *"
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: zivotbot
-            image: quay.io/cceshop/zivotbot:0.2.0
+          - name: zivotbot-cleaner
+            image: quay.io/cceshop/zivotbot-sender:0.0.1
             volumeMounts:
             - name: sqlite3-storage
               mountPath: /app/db/zivotbot.db
