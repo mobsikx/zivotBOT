@@ -1,0 +1,33 @@
+FROM debian:latest
+
+ONBUILD USER root
+
+ENV TERM xterm
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update \
+    && apt-get -y install \
+                    apt-utils \
+                    procps \
+                    vim \
+    && apt-get -y install \
+                    curl \
+                    sqlite3 \
+                    tini \
+    && apt-get update \
+    && apt-get -y upgrade \
+    && rm -rf /var/lib/apt/lists/* 
+
+RUN useradd -ms /bin/bash zivotbot-sender \
+    && mkdir -p /app/bin \
+                /app/db \
+                /app/tmp
+COPY ./scripts/sender/run.sh /app/bin/run.sh
+RUN  chmod +x /app/bin/run.sh \
+     && chown -R zivotbot-sender:zivotbot-sender /app
+
+WORKDIR /app
+USER zivotbot-sender
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["/app/bin/run.sh"]

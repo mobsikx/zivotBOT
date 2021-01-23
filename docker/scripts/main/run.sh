@@ -415,25 +415,25 @@ do
   echo "DEBUG ### completion_id: ${completion_id}"
   
   # mark as don't send in DB
-  tosend=`db_send_notification "${completion_id}"`
-  tosend_err=$?
-  if [[ ${tosend_err} -eq 0 ]]; then 
-    if [ -z "${tosend}" ]; then
-      db_update_sendstatus "${completion_id}" 3
-    else
-      # send message to a telegram channel
-      send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
-      send_url=`echo "${tosend}" | cut -f 2 -d '|'`
-  
-      send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
-      send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
-  
-      send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
-      if [[ $? -eq 0 ]]; then
-        db_update_sendstatus "${completion_id}" 2
-      fi
-    fi
-  fi
+  #tosend=`db_send_notification "${completion_id}"`
+  #tosend_err=$?
+  #if [[ ${tosend_err} -eq 0 ]]; then 
+  #  if [ -z "${tosend}" ]; then
+  #    db_update_sendstatus "${completion_id}" 3
+  #  else
+  #    # send message to a telegram channel
+  #    send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
+  #    send_url=`echo "${tosend}" | cut -f 2 -d '|'`
+  #
+  #    send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
+  #    send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
+  #
+  #    send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
+  #    if [[ $? -eq 0 ]]; then
+  #      db_update_sendstatus "${completion_id}" 2
+  #    fi
+  #  fi
+  #fi
   
   idx=$(( ${idx} + 1))
 done
