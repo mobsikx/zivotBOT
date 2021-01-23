@@ -109,7 +109,7 @@ function send_telegram() {
 ##    ##
 declare -a l_all_nonsent_ids=(`db_get_send_ids`)
 
-for id completion_id in ${l_all_nonsent_ids[@]}; do
+for completion_id in ${l_all_nonsent_ids[@]}; do
   # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
   tosend_err=$?
