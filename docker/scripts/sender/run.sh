@@ -107,14 +107,21 @@ function send_telegram() {
 ##M   ##
 # Main #
 ##    ##
-declare -a l_all_nonsent_ids=(`db_get_send_ids`)
+declare -a l_all_unsent_ids=(`db_get_send_ids`)
 
-for completion_id in ${l_all_nonsent_ids[@]}; do
+echo -e "\n========================================"
+echo "DEBUG ### List of unsent ids:    ${l_all_unsent_ids[@]}"
+
+for completion_id in ${l_all_unsent_ids[@]}; do
+
+  echo "DEBUG ### Processing id:       ${completion_id}"
+
   # mark as don't send in DB
   tosend=`db_send_notification "${completion_id}"`
   tosend_err=$?
   if [[ ${tosend_err} -ne 0 ]]; then
     db_update_sendstatus "${completion_id}" 3
+    echo "DEBUG ### DON'T SEND..."
     continue
   fi
 	
@@ -122,12 +129,16 @@ for completion_id in ${l_all_nonsent_ids[@]}; do
   send_loc=`echo "${tosend}" | cut -f 1 -d '|'`
   send_url=`echo "${tosend}" | cut -f 2 -d '|'`
 
+  echo "DEBUG ### Processing location: ${send_loc}"
+  echo "DEBUG ### Processing url:      ${send_url}"
+
   send_tele_botid=`db_get "config_telegram" "bot_id" "name = 'Amalka'"`
   send_tele_channelid=`db_get "config_telegram" "channel_id" "name = 'Amalka'"`
 	
   send_telegram "${send_tele_botid}" "${send_tele_channelid}" "${send_loc}" "${send_url}"
   if [[ $? -eq 0 ]]; then
     db_update_sendstatus "${completion_id}" 2
+    echo "DEBUG ### WAS SENT..."
   fi
 done
 
