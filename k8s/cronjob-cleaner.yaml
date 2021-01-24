@@ -4,7 +4,7 @@ kind: CronJob
 metadata:
   name: zivotbot-cleaner-cronjob
 spec:
-  schedule: "0 7,21 * * *"
+  schedule: "15 7,21 * * *"
   jobTemplate:
     spec:
       template:
