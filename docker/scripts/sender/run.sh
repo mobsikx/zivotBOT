@@ -45,7 +45,7 @@ SELECT al.location, au.url
  LIMIT 1;
 " | sqlite3 "${C_DB_FILE}"`
 
-  if [ -z ${tosend} ];
+  if [ -z "${tosend}" ];
   then
     return 1
   fi

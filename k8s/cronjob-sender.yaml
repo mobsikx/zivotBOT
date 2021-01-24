@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
           - name: zivotbot-cleaner
-            image: quay.io/cceshop/zivotbot-sender:0.1.0
+            image: quay.io/cceshop/zivotbot-sender:0.1.1
             volumeMounts:
             - name: sqlite3-storage
               mountPath: /app/db/zivotbot.db

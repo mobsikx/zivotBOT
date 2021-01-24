@@ -10,9 +10,9 @@ RUN apt-get update \
                     apt-utils \
                     procps \
                     vim \
-    && apt-get -y install \
                     curl \
                     sqlite3 \
+                    jq \
                     tini \
     && apt-get update \
     && apt-get -y upgrade \
