@@ -356,7 +356,7 @@ do
 
   # reserved
   is_reserved=$(grep -ciE 'Rezervováno' "/app/tmp/detail-${idx}.dump" 2>/dev/null)
-  if [[ ${is_reserved} > 0 ]]; then
+  if [[ ${is_reserved} -gt 0 ]]; then
     echo "DEBUG ### Reserved: YES"
     idx=$(( ${idx} + 1))
     continue

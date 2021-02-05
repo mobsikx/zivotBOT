@@ -22,9 +22,10 @@ SELECT url
   FROM adv_urls
  WHERE id = ${url_id};
   " | sqlite3 ${C_DB_FILE}`
-  
+ 
+  is_reserved=`google-chrome --no-sandbox --headless --disable-gpu --dump-dom ${url} 2>/dev/null | grep -ci 'Rezervováno'` 
   not_exists=`google-chrome --no-sandbox --headless --disable-gpu --dump-dom ${url} 2>/dev/null | grep -ci 'inzerát neexistuje'`
-  if [[ ${not_exists} -ne 0 ]]; then
+  if [[ ${not_exists} -ne 0 ]] || [[ ${is_reserved} -ne 0 ]]; then
     echo "Removing:"
     echo -e "\tadv_completion_list id = ${compl_id}"
     echo -e "\tadv_urls id            = ${url_id}"
