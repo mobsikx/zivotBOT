@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
           - name: zivotbot
-            image: quay.io/cceshop/zivotbot:0.2.2
+            image: quay.io/cceshop/zivotbot:0.2.3
             volumeMounts:
             - name: sqlite3-storage
               mountPath: /app/db/zivotbot.db
