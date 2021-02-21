@@ -350,7 +350,13 @@ do
   echo -e "\n========================================"
   echo "DEBUG ### loc: ${loc}"
   echo "DEBUG ### sum: ${loc_sha256sum}"
-  
+ 
+  # location empty, skip to next
+  if [[ -z "${loc}" ]]; then
+    idx=$(( ${idx} + 1))
+    continue
+  fi
+
   loc_from=`strip_location "${loc}"`
   loc_from=`uriencode "${loc_from}"`
 
